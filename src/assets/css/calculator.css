@@ -81,7 +81,7 @@
     background-color: grey;
 }
 /* btn 0 is wider */
-#btn_0{
+.zero{
     grid-column-start: 1;
     grid-column-end: 3;
     color: white;

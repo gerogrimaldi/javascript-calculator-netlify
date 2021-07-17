@@ -21,6 +21,9 @@ export class Calculator extends Component {
             case "=":
                 this.calculateResult();
                 break;
+            case ".":
+                this.addDecimal();
+                break;
             default:
                 //if it is a number y append it. If not, its an operator
                 (!isNaN(text)) ? (this.addNumber(text)) : (this.addOperator(text))
@@ -75,34 +78,62 @@ export class Calculator extends Component {
     }
 
     addNumber = (digit) => {
+        let decimal = false;
+
         if(this.state.equalPressed){
             this.equalWasPressed(1);
-            this.setState({
-                calculated: [],
-            });
         }
+
         //get last item in array
         let values = this.state.calculated;
         let num = values.slice(-1).join();
 
-        //if it is a number i append "digit" to it
-        if (!isNaN(parseInt(num))){
-            //remove item from the array
+        //if last char is a decimal
+        let last_char = num.slice(-1);
+        
+        if(last_char === "."){
+            num+=digit;
             this.state.calculated.pop();
-            //add the next digit to the number
-            num += digit;
-            //append num (string) converted to number
             this.setState( (state) => ({
-                calculated: [...state.calculated, parseInt(num)],
+                calculated: [...state.calculated, parseFloat(num)],
                 resultDisplay: state.resultDisplay + digit,
-                input: digit
+                input: num
             }));
+            decimal = true;
+        }
+
+        //if it is a number i append "digit" to it
+        if (!isNaN(parseInt(num)) && !decimal){
+            //dont allow multiple 0
+            let multiple_zero = false;
+            if (values.length === 1){
+                if (values[0]===0){
+                    if (digit===0){
+                        multiple_zero = true;
+                    }
+                }
+            }
+            if (!multiple_zero){
+                //remove item from the array
+                this.state.calculated.pop();
+                //add the next digit to the number
+                num += digit;
+                //append num (string) converted to number
+                this.setState( (state) => ({
+                    calculated: [...state.calculated, parseInt(num)],
+                    resultDisplay: state.resultDisplay + digit,
+                    input: parseInt(num)
+                }));
+            }
+
         }else{ //if last item isnt a number i just append the "digit" param
-            this.setState( (state) => ({
-                calculated: [...state.calculated, digit],
-                resultDisplay: state.resultDisplay + digit,
-                input: digit
-            }));
+            if(!decimal){
+                this.setState( (state) => ({
+                    calculated: [...state.calculated, digit],
+                    resultDisplay: state.resultDisplay + digit,
+                    input: digit
+                }));
+            }
         }
     }
 
@@ -134,6 +165,26 @@ export class Calculator extends Component {
         }
     }
 
+    addDecimal = () => {
+    //get last item in array
+        let values = this.state.calculated;
+        let num = values.slice(-1).join();
+
+        if (!isNaN(parseInt(num)) && num.slice(-1)!="."){
+            //remove item from the array
+            this.state.calculated.pop();
+            //append decimal dot
+            num += ".";
+            //append num (string) converted to number
+            this.setState( (state) => ({
+                calculated: [...state.calculated, num],
+                resultDisplay: state.resultDisplay + ".",
+                input: num
+            }));
+            console.log(this.state.calculated[0])
+        }
+    }
+
     clearState = () => {
         this.setState( (state) => ({
             resultDisplay: "",
@@ -158,28 +209,30 @@ export class Calculator extends Component {
     }
     render() {
         const numbers = [7, 8, 9, 4, 5, 6, 1, 2, 3, 0, "."];
+        const numbers_id = ["seven", "eight", "nine", "four", "five" , "six" , "one" , "two", "three" ,"zero", "decimal"];
         const operators = ["/", "*", "-", "+"];
+        const operators_id = ["divide", "multiply", "subtract", "add"];
         return (
             <div className="calculator-container">
-                <div id="display" className="display" >
+                <div className="display" >
                   <span className="result-display">{this.state.resultDisplay}</span>
-                  <span className="input-display">{this.state.input}</span>
+                  <span id="display" className="input-display">{this.state.input}</span>
                 </div>
                 <div id="buttons" className="buttons-container">
                     <div id="numbers-container" className="numbers-container">
                         {
                             numbers.map((num, index) => {
-                                return <Button id={"btn_"+num} key={num + "_key"} text={num} class={"num-btn"} handler = {this.handler}/>
+                                return <Button id={numbers_id[index]} key={num + "_key"} text={num} class={"num-btn " + numbers_id[index]} handler = {this.handler}/>
                             })
                         }
                     </div>
                     {
                         operators.map((text, index) => {
-                            return <Button id={"spec-btn_"+text} key={text + "_key"} text={text} class={"operator-btn"} handler = {this.handler}/>
+                            return <Button id={operators_id[index]} key={text + "_key"} text={text} class={"operator-btn"} handler = {this.handler}/>
                         })
                     }
-                    <Button id="AC-btn" text="AC" class="AC-btn" handler = {this.handler}></Button>
-                    <Button id="equal-btn" text="=" class="equal-btn" handler = {this.handler}></Button>
+                    <Button id="clear" text="AC" class="AC-btn" handler = {this.handler}></Button>
+                    <Button id="equals" text="=" class="equal-btn" handler = {this.handler}></Button>
                 </div>
             </div>
         )
