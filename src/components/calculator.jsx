@@ -7,55 +7,39 @@ export class Calculator extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            result: "",
+            resultDisplay: "",
             input: "0",
-            calculated: []
+            calculated: [],
+            equalPressed: false
         }
-    }
-    calculation = (event) => {
-        // const result = event.target.getAttribute('data-value');
-        // return result;
     }
     handler = (text) => {
         switch(text){
             case "AC":
-                this.setState( (state) => ({
-                    result: "",
-                    input: "0",
-                    calculated: []
-                }));
-                console.log("borrar");
+                this.clearState();
                 break;
-
             case "=":
-                let result = this.calculateResult();
-                this.setState( (state) => ({
-                    result: state.result + "=" + result,
-                    input: result
-                }));
-
-                console.log("igual");
+                this.calculateResult();
                 break;
-
             default:
+                //if it is a number y append it. If not, its an operator
+                (!isNaN(text)) ? (this.addNumber(text)) : (this.addOperator(text))
                 this.setState( (state) => ({
-                    calculated: [...state.calculated, text],
-                    result: state.result + text,
+                    resultDisplay: state.resultDisplay + text,
                     input: text
-                }),
-                () => {console.log(this.state.result);})
+                }));
                 break;
         }
     }
+    
     calculateResult = () =>{
         let values = this.state.calculated;
-        let calculated_value;
         let result = 0;
-
+        
         for (let i=0; i<values.length; i++){
             if (!isNaN(values[i])){ //if it is a number 
                 result = values[i];
-                console.log(result);
+                console.log(result); //initial result
             }else{ //if its not a number then it is an operator
                 if (!isNaN(values[i+1])){ //if the following item is a number I calculate
                     switch(values[i]){
@@ -71,17 +55,79 @@ export class Calculator extends Component {
                         case "+":
                             result += values[i+1];
                             break;
+                        default: break; //to remove the warning
                     }
                     console.log(result);
-                    i+=1;
+                    i+=1; //skip the second number used
                 }else{ //two operators together give syntax error
-                    result = "syntax error"
+                    result = "Syntax error"
                     break;
                 }
             }
         }
-        return result;
-        console.log(result);
+        this.setState( (state) => ({
+            resultDisplay: state.resultDisplay + "=" + result,
+            input: result,
+            calculated: [result],
+            equalPressed: true
+        }));
+        console.log("igual");
+    }
+
+    addNumber = (digit) => {
+        if(this.state.equalPressed){
+            this.clearState();
+        }
+        //get last item in array
+        let values = this.state.calculated;
+        let num = values.slice(-1).join();
+
+        //if it is a number i append "digit" to it
+        if (!isNaN(parseInt(num))){
+            //remove item from the array
+            this.state.calculated.pop();
+            //add the next digit to the number
+            num += digit;
+            //append num (string) converted to number
+            this.setState( (state) => ({
+                calculated: [...state.calculated, parseInt(num)]
+            }));
+        }else{ //if last item isnt a number i just append the "digit" param
+            this.setState( (state) => ({
+                calculated: [...state.calculated, digit]
+            }));
+        }
+    }
+
+    addOperator = (operator) => {
+        if(this.state.equalPressed){
+            this.equalWasPressed(2);
+        }
+        this.setState( (state) => ({
+            calculated: [...state.calculated, operator],
+        }));
+    }
+
+    clearState = () => {
+        this.setState( (state) => ({
+            resultDisplay: "",
+            input: "0",
+            calculated: [],
+            equalPressed: false
+        }));
+        console.log("borrar");
+    }
+
+    equalWasPressed = (option) => {
+        if (option===1){ //option 1: new number input, so i clear all state
+            this.clearState();
+        }else{ //option 2: operator input, so i work with the last answer
+            this.setState( (state) => ({
+                resultDisplay: state.input,
+                equalPressed: false
+            }));
+        }
+        console.log("= pressed")
     }
     render() {
         const numbers = [7, 8, 9, 4, 5, 6, 1, 2, 3, 0, "."];
@@ -90,7 +136,7 @@ export class Calculator extends Component {
         return (
             <div className="calculator-container">
                 <div id="display" className="display" >
-                  <span className="result-display">{this.state.result}</span>
+                  <span className="result-display">{this.state.resultDisplay}</span>
                   <span className="input-display">{this.state.input}</span>
                 </div>
                 <div id="buttons" className="buttons-container">
