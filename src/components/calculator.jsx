@@ -25,8 +25,7 @@ export class Calculator extends Component {
                 //if it is a number y append it. If not, its an operator
                 (!isNaN(text)) ? (this.addNumber(text)) : (this.addOperator(text))
                 this.setState( (state) => ({
-                    resultDisplay: state.resultDisplay + text,
-                    input: text
+
                 }));
                 break;
         }
@@ -60,7 +59,8 @@ export class Calculator extends Component {
                     console.log(result);
                     i+=1; //skip the second number used
                 }else{ //two operators together give syntax error
-                    result = "Syntax error"
+                    //if i exceed the array length i return the input
+                    (i+2 > values.length) ? (result=result) : (result="Syntax error") 
                     break;
                 }
             }
@@ -68,7 +68,7 @@ export class Calculator extends Component {
         this.setState( (state) => ({
             resultDisplay: state.resultDisplay + "=" + result,
             input: result,
-            calculated: [result],
+            calculated: [],
             equalPressed: true
         }));
         console.log("igual");
@@ -76,7 +76,10 @@ export class Calculator extends Component {
 
     addNumber = (digit) => {
         if(this.state.equalPressed){
-            this.clearState();
+            this.equalWasPressed(1);
+            this.setState({
+                calculated: [],
+            });
         }
         //get last item in array
         let values = this.state.calculated;
@@ -90,11 +93,15 @@ export class Calculator extends Component {
             num += digit;
             //append num (string) converted to number
             this.setState( (state) => ({
-                calculated: [...state.calculated, parseInt(num)]
+                calculated: [...state.calculated, parseInt(num)],
+                resultDisplay: state.resultDisplay + digit,
+                input: digit
             }));
         }else{ //if last item isnt a number i just append the "digit" param
             this.setState( (state) => ({
-                calculated: [...state.calculated, digit]
+                calculated: [...state.calculated, digit],
+                resultDisplay: state.resultDisplay + digit,
+                input: digit
             }));
         }
     }
@@ -103,9 +110,28 @@ export class Calculator extends Component {
         if(this.state.equalPressed){
             this.equalWasPressed(2);
         }
-        this.setState( (state) => ({
-            calculated: [...state.calculated, operator],
-        }));
+        //get last item in array
+        let num = this.state.calculated.slice(-1).join();
+
+        if (!isNaN(parseInt(num))){ //if last item is number i append operator
+            this.setState( (state) => ({
+                calculated: [...state.calculated, operator],
+                resultDisplay: state.resultDisplay + operator,
+                input: operator
+            }));
+        }else{ //if last item is operator i replace it
+            this.state.calculated.pop();
+            this.setState( (state) => ({
+                calculated: [...state.calculated, operator],
+                input: operator
+            }),
+            () => {   
+                this.setState( (state) => ({
+                    resultDisplay: state.calculated.join("")
+                })
+                )}
+            )
+        }
     }
 
     clearState = () => {
@@ -123,7 +149,8 @@ export class Calculator extends Component {
             this.clearState();
         }else{ //option 2: operator input, so i work with the last answer
             this.setState( (state) => ({
-                resultDisplay: state.input,
+                resultDisplay: "" + state.input,
+                calculated: [state.input],
                 equalPressed: false
             }));
         }
@@ -132,7 +159,6 @@ export class Calculator extends Component {
     render() {
         const numbers = [7, 8, 9, 4, 5, 6, 1, 2, 3, 0, "."];
         const operators = ["/", "*", "-", "+"];
-
         return (
             <div className="calculator-container">
                 <div id="display" className="display" >
