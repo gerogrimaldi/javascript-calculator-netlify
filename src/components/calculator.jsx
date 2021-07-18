@@ -7,9 +7,9 @@ export class Calculator extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            resultDisplay: "",
+            formula: "",
             input: "0",
-            calculated: [],
+            formula_arr: [],
             equalPressed: false
         }
     }
@@ -35,7 +35,7 @@ export class Calculator extends Component {
     }
     
     calculateResult = () =>{
-        let values = this.state.calculated;
+        let values = this.state.formula_arr;
         let result = 0;
         
         for (let i=0; i<values.length; i++){
@@ -69,9 +69,9 @@ export class Calculator extends Component {
             }
         }
         this.setState( (state) => ({
-            resultDisplay: state.resultDisplay + "=" + result,
+            formula: state.formula + "=" + result,
             input: result,
-            calculated: [],
+            formula_arr: [],
             equalPressed: true
         }));
         console.log("igual");
@@ -85,18 +85,17 @@ export class Calculator extends Component {
         }
 
         //get last item in array
-        let values = this.state.calculated;
+        let values = this.state.formula_arr;
         let num = values.slice(-1).join();
 
-        //if last char is a decimal
+        //if its a decimal number i append the first decimal digit
         let last_char = num.slice(-1);
-        
         if(last_char === "."){
             num+=digit;
-            this.state.calculated.pop();
+            this.state.formula_arr.pop();
             this.setState( (state) => ({
-                calculated: [...state.calculated, parseFloat(num)],
-                resultDisplay: state.resultDisplay + digit,
+                formula_arr: [...state.formula_arr, parseFloat(num)],
+                formula: state.formula + digit,
                 input: num
             }));
             decimal = true;
@@ -115,22 +114,22 @@ export class Calculator extends Component {
             }
             if (!multiple_zero){
                 //remove item from the array
-                this.state.calculated.pop();
+                this.state.formula_arr.pop();
                 //add the next digit to the number
                 num += digit;
                 //append num (string) converted to number
                 this.setState( (state) => ({
-                    calculated: [...state.calculated, parseInt(num)],
-                    resultDisplay: state.resultDisplay + digit,
+                    formula_arr: [...state.formula_arr, parseInt(num)],
+                    formula: state.formula + digit,
                     input: parseInt(num)
                 }));
             }
 
-        }else{ //if last item isnt a number i just append the "digit" param
+        }else{ //if last item isnt a number i just add the "digit" param to the array
             if(!decimal){
                 this.setState( (state) => ({
-                    calculated: [...state.calculated, digit],
-                    resultDisplay: state.resultDisplay + digit,
+                    formula_arr: [...state.formula_arr, digit],
+                    formula: state.formula + digit,
                     input: digit
                 }));
             }
@@ -142,23 +141,23 @@ export class Calculator extends Component {
             this.equalWasPressed(2);
         }
         //get last item in array
-        let num = this.state.calculated.slice(-1).join();
+        let num = this.state.formula_arr.slice(-1).join();
 
         if (!isNaN(parseInt(num))){ //if last item is number i append operator
             this.setState( (state) => ({
-                calculated: [...state.calculated, operator],
-                resultDisplay: state.resultDisplay + operator,
+                formula_arr: [...state.formula_arr, operator],
+                formula: state.formula + operator,
                 input: operator
             }));
         }else{ //if last item is operator i replace it
-            this.state.calculated.pop();
+            this.state.formula_arr.pop();
             this.setState( (state) => ({
-                calculated: [...state.calculated, operator],
+                formula_arr: [...state.formula_arr, operator],
                 input: operator
             }),
             () => {   
                 this.setState( (state) => ({
-                    resultDisplay: state.calculated.join("")
+                    formula: state.formula_arr.join("")
                 })
                 )}
             )
@@ -167,29 +166,29 @@ export class Calculator extends Component {
 
     addDecimal = () => {
     //get last item in array
-        let values = this.state.calculated;
+        let values = this.state.formula_arr;
         let num = values.slice(-1).join();
 
-        if (!isNaN(parseInt(num)) && num.slice(-1)!="."){
+        if (!isNaN(parseInt(num)) && toString(num.slice(-1))!=="."){
             //remove item from the array
-            this.state.calculated.pop();
+            this.state.formula_arr.pop();
             //append decimal dot
             num += ".";
             //append num (string) converted to number
             this.setState( (state) => ({
-                calculated: [...state.calculated, num],
-                resultDisplay: state.resultDisplay + ".",
+                formula_arr: [...state.formula_arr, num],
+                formula: state.formula + ".",
                 input: num
             }));
-            console.log(this.state.calculated[0])
+            console.log(this.state.formula_arr[0])
         }
     }
 
     clearState = () => {
         this.setState( (state) => ({
-            resultDisplay: "",
+            formula: "",
             input: "0",
-            calculated: [],
+            formula_arr: [],
             equalPressed: false
         }));
         console.log("borrar");
@@ -200,8 +199,8 @@ export class Calculator extends Component {
             this.clearState();
         }else{ //option 2: operator input, so i work with the last answer
             this.setState( (state) => ({
-                resultDisplay: "" + state.input,
-                calculated: [state.input],
+                formula: "" + state.input,
+                formula_arr: [state.input],
                 equalPressed: false
             }));
         }
@@ -215,7 +214,7 @@ export class Calculator extends Component {
         return (
             <div className="calculator-container">
                 <div className="display" >
-                  <span className="result-display">{this.state.resultDisplay}</span>
+                  <span className="result-display">{this.state.formula}</span>
                   <span id="display" className="input-display">{this.state.input}</span>
                 </div>
                 <div id="buttons" className="buttons-container">
