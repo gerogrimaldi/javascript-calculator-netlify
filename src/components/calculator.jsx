@@ -25,7 +25,7 @@ export class Calculator extends Component {
                 this.addDecimal();
                 break;
             default:
-                //if it is a number y append it. If not, its an operator
+                //if it is a number I append it. If not, its an operator
                 (!isNaN(text)) ? (this.addNumber(text)) : (this.addOperator(text))
                 this.setState( (state) => ({
 
@@ -35,36 +35,40 @@ export class Calculator extends Component {
     }
     
     calculateResult = () =>{
-        let values = this.state.formula_arr;
-        let result = 0;
+        let values = this.correctFormula();
+        let result;
         
         for (let i=0; i<values.length; i++){
             if (!isNaN(values[i])){ //if it is a number 
                 result = values[i];
-                console.log(result); //initial result
             }else{ //if its not a number then it is an operator
-                if (!isNaN(values[i+1])){ //if the following item is a number I calculate
-                    switch(values[i]){
-                        case "/":
-                            result /= values[i+1];
-                            break;
-                        case "*":
-                            result *= values[i+1];
-                            break;
-                        case "-":
-                            result -= values[i+1];
-                            break;
-                        case "+":
-                            result += values[i+1];
-                            break;
-                        default: break; //to remove the warning
+                if(typeof(result)=="string" && result.indexOf(".")!==-1){
+                    result = parseInt(result)
+                    console.log("result is decimal")
+                }else{
+                    if (!isNaN(values[i+1])){ //if the following item is a number I calculate
+                        switch(values[i]){
+                            case "/":
+                                result /= values[i+1];
+                                break;
+                            case "*":
+                                result *= values[i+1];
+                                break;
+                            case "-":
+                                result -= values[i+1];
+                                break;
+                            case "+":
+                                result += values[i+1];
+                                break;
+                            default: break; //to remove the warning
+                        }
+                        console.log(result);
+                        i+=1; //skip the second number used
+                    }else{ //two operators together give syntax error
+                        //if i exceed the array length i return the input
+                        (i+2 > values.length) ? (result=result) : (result="Syntax error") 
+                        break;
                     }
-                    console.log(result);
-                    i+=1; //skip the second number used
-                }else{ //two operators together give syntax error
-                    //if i exceed the array length i return the input
-                    (i+2 > values.length) ? (result=result) : (result="Syntax error") 
-                    break;
                 }
             }
         }
@@ -75,6 +79,25 @@ export class Calculator extends Component {
             equalPressed: true
         }));
         console.log("igual");
+    }
+
+    correctFormula = () => {
+        let values = this.state.formula_arr;
+        for (let i=0; i<values.length; i++){
+            //if its a - operator y replace the next number for a negative one
+            if (values[i] === "-"){
+                values[i+1] = -values[i+1]
+
+                //if there is no previous operator i add a '+' 
+                if(!isNaN(values[i-1])){
+                    values[i] = "+"
+                }else{ //if there is one, y remove the '-'
+                    values.splice(i,1)
+                }
+            }
+        }
+        console.log(values)
+        return values;
     }
 
     addNumber = (digit) => {
@@ -102,7 +125,7 @@ export class Calculator extends Component {
         }
 
         //if it is a number i append "digit" to it
-        if (!isNaN(parseInt(num)) && !decimal){
+        if (!isNaN(parseFloat(num)) && !decimal){
             //dont allow multiple 0
             let multiple_zero = false;
             if (values.length === 1){
@@ -119,9 +142,9 @@ export class Calculator extends Component {
                 num += digit;
                 //append num (string) converted to number
                 this.setState( (state) => ({
-                    formula_arr: [...state.formula_arr, parseInt(num)],
+                    formula_arr: [...state.formula_arr, parseFloat(num)],
                     formula: state.formula + digit,
-                    input: parseInt(num)
+                    input: parseFloat(num)
                 }));
             }
 
@@ -142,15 +165,21 @@ export class Calculator extends Component {
         }
         //get last item in array
         let num = this.state.formula_arr.slice(-1).join();
+        let decimal_number = num.slice(-1);
 
-        if (!isNaN(parseInt(num))){ //if last item is number i append operator
+        if (!isNaN(parseInt(num)) || decimal_number==="."){ //if last item is number or decimal dot i append operator
             this.setState( (state) => ({
                 formula_arr: [...state.formula_arr, operator],
                 formula: state.formula + operator,
                 input: operator
             }));
-        }else{ //if last item is operator i replace it
-            this.state.formula_arr.pop();
+        }else{ //if last item is operator i replace it except the '-'
+            if (operator !== "-"){
+                this.state.formula_arr.pop();
+            }
+            if(num === "-"){
+                this.state.formula_arr.pop();
+            }
             this.setState( (state) => ({
                 formula_arr: [...state.formula_arr, operator],
                 input: operator
@@ -168,8 +197,9 @@ export class Calculator extends Component {
     //get last item in array
         let values = this.state.formula_arr;
         let num = values.slice(-1).join();
+        let decimal_number = num.indexOf(".");
 
-        if (!isNaN(parseInt(num)) && toString(num.slice(-1))!=="."){
+        if (!isNaN(parseFloat(num)) && decimal_number===-1){
             //remove item from the array
             this.state.formula_arr.pop();
             //append decimal dot

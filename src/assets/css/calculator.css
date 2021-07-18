@@ -1,7 +1,7 @@
 
 .calculator-container{
-    width: 240px;
-    height: 300px;
+    width: 340px;
+    height: 400px;
     padding: 2px;
     border: 2px solid grey;
     display: grid;
@@ -23,14 +23,14 @@
 .input-display{
     grid-row-start: 2;
     grid-row-end: 3;
-    font-size: 14px;
+    font-size: 1.6em;
     color: white;
 }
 .result-display{
     grid-row-start: 1;
     grid-row-end: 2;
     color: coral;
-    font-size: 12px;
+    font-size: 1.2em;
 }
 
 .buttons-container{
