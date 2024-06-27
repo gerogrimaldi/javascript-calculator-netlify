@@ -1,5 +1,5 @@
 # Getting Started with Create React App
-Link: https://javascript-calculator-gerogrimaldi.netlify.app/
+Link to try: https://javascript-calculator-gerogrimaldi.netlify.app/
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
